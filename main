@@ -1,0 +1,173 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+public class Main {
+    public static void main(String[] args) {
+        Wall wall = new Wall();
+        wall.addBlock(new CompositeBlockImpl("Red", "Wood"));
+        wall.addBlock(new CompositeBlockImpl("Blue", "Metal"));
+
+        CompositeBlock compositeBlock = new CompositeBlockImpl();
+        compositeBlock.addBlock(new CompositeBlockImpl("Green", "Wood"));
+        compositeBlock.addBlock(new CompositeBlockImpl("Red", "Stone"));
+
+        wall.addBlock(compositeBlock);
+
+        Optional<Block> redBlock = wall.findBlockByColor("Red");
+        if (redBlock.isPresent()) {
+            System.out.println("Red Block: " + redBlock.get().getColor());
+        } else {
+            System.out.println("No block found with the specified color.");
+        }
+
+        List<Block> woodBlocks = wall.findBlocksByMaterial("Wood");
+        System.out.println("Wood Blocks: " + woodBlocks);
+
+        int numberOfBlocks = wall.count();
+        System.out.println("Number of Blocks: " + numberOfBlocks);
+    }
+
+    interface Structure {
+        Optional<Block> findBlockByColor(String color);
+        List<Block> findBlocksByMaterial(String material);
+        int count();
+    }
+
+    public static class Wall implements Structure {
+        private List<Block> blocks;
+
+        public Wall() {
+            blocks = new ArrayList<>();
+        }
+
+        public void addBlock(Block block) {
+            blocks.add(block);
+        }
+
+        @Override
+        public Optional<Block> findBlockByColor(String color) {
+            for (Block block : blocks) {
+                if (block.getColor() != null && block.getColor().equalsIgnoreCase(color)) {
+                    return Optional.of(block);
+                }
+                if (block instanceof CompositeBlock) {
+                    Optional<Block> compositeBlockResult = ((CompositeBlock) block).findBlockByColor(color);
+                    if (compositeBlockResult.isPresent()) {
+                        return compositeBlockResult;
+                    }
+                }
+            }
+            return Optional.empty();
+        }
+
+        @Override
+        public List<Block> findBlocksByMaterial(String material) {
+            List<Block> result = new ArrayList<>();
+            for (Block block : blocks) {
+                if (block.getMaterial() != null && block.getMaterial().equalsIgnoreCase(material)) {
+                    result.add(block);
+                }
+                if (block instanceof CompositeBlock) {
+                    result.addAll(((CompositeBlock) block).findBlocksByMaterial(material));
+                }
+            }
+            return result;
+        }
+
+        @Override
+        public int count() {
+            int count = blocks.size();
+            for (Block block : blocks) {
+                if (block instanceof CompositeBlock) {
+                    count += ((CompositeBlock) block).count();
+                }
+            }
+            return count;
+        }
+    }
+
+    interface Block {
+        String getColor();
+        String getMaterial();
+    }
+
+    interface CompositeBlock extends Block {
+        void addBlock(Block block);
+        Optional<Block> findBlockByColor(String color);
+        List<Block> findBlocksByMaterial(String material);
+        int count();
+    }
+
+    public static class CompositeBlockImpl implements CompositeBlock {
+        private String color;
+        private String material;
+        private List<Block> blocks;
+
+        public CompositeBlockImpl() {
+            blocks = new ArrayList<>();
+        }
+
+        public CompositeBlockImpl(String color, String material) {
+            this.color = color;
+            this.material = material;
+            blocks = new ArrayList<>();
+        }
+
+        @Override
+        public void addBlock(Block block) {
+            blocks.add(block);
+        }
+
+        @Override
+        public Optional<Block> findBlockByColor(String color) {
+            for (Block block : blocks) {
+                if (block.getColor() != null && block.getColor().equalsIgnoreCase(color)) {
+                    return Optional.of(block);
+                }
+                if (block instanceof CompositeBlock) {
+                    Optional<Block> compositeBlockResult = ((CompositeBlock) block).findBlockByColor(color);
+                    if (compositeBlockResult.isPresent()) {
+                        return compositeBlockResult;
+                    }
+                }
+            }
+            return Optional.empty();
+        }
+
+        @Override
+        public List<Block> findBlocksByMaterial(String material) {
+            List<Block> result = new ArrayList<>();
+            for (Block block : blocks) {
+                if (block.getMaterial() != null && block.getMaterial().equalsIgnoreCase(material)) {
+                    result.add(block);
+                }
+                if (block instanceof CompositeBlock) {
+                    result.addAll(((CompositeBlock) block).findBlocksByMaterial(material));
+                }
+            }
+            return result;
+        }
+
+        @Override
+        public int count() {
+            int count = blocks.size();
+            for (Block block : blocks) {
+                if (block instanceof CompositeBlock) {
+                    count += ((CompositeBlock) block).count();
+                }
+            }
+            return count;
+        }
+
+        @Override
+        public String getColor() {
+            return color;
+        }
+
+        @Override
+        public String getMaterial() {
+            return material;
+        }
+    }
+}
